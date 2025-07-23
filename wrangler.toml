@@ -1,0 +1,47 @@
+name = "statusphere-tmp-clone-test-final"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-04-08"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+watch_dir = ["src", "public", "templates"]
+
+# database for status records
+[[d1_databases]]
+binding = "DB"
+database_name = "statusphere-statuses-tmp-clone-test-final"
+database_id = "21d292a8-1879-4b82-9b6c-0631b1099e64"
+
+
+# simple kv store for auth state/session mappings
+[[kv_namespaces]]
+binding = "KV"
+id = "ebb6105edcc44580abbc22fc6e0c4aee"
+
+
+# log requests using worker logs
+[observability.logs]
+enabled = true
+invocation_logs = false
+
+[triggers]
+crons = [ "*/1 * * * *" ]
+
+# serves css without having to spin up a worker
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+
+# used for live updates via websocket
+[durable_objects]
+bindings = [{ name = "MSGBROKER", class_name = "MsgBroker" }]
+
+[[migrations]]
+tag = "v1"                                              # Should be unique for each entry
+new_sqlite_classes = ["MsgBroker", "JetstreamListener"]
+
+[[migrations]]
+tag = "v2"                              # Should be unique for each entry
+deleted_classes = ["JetstreamListener"]
